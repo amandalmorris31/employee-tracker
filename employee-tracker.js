@@ -1,5 +1,6 @@
-var mysql = require("mysql");
-
+const mysql = require("mysql");
+const inquirer = require("inquirer");
+const cTable = require('console.table');
 var connection = mysql.createConnection({
   host: "localhost",
 
@@ -17,7 +18,7 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId + "\n");
-  viewRoles();
+  addRole();
 });
 
 function viewDepartment()
@@ -26,13 +27,17 @@ function viewDepartment()
     connection.query("SELECT * FROM department", function(err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    //console.log(res);
-    for(var i=0; i<res.length;i++)
-    {
-        console.log(res[i].name);
-    }
+    console.table(res);
+ 
+    
+    // for(var i=0; i<res.length;i++)
+    // {
+    //     console.log(res[i].name);
+    // }
 
-  });
+
+  }
+);
 }
 function viewRoles()
 {
@@ -40,20 +45,162 @@ function viewRoles()
     connection.query("SELECT * FROM role", function(err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    //console.log(res);
-    for(var i=0; i<res.length;i++)
-    {
-        console.log(res[i].title);
-        console.log(res[i].salary);
-        console.log(res[i].department_id);
-    }
+    console.table(res);
+    // for(var i=0; i<res.length;i++)
+    // {
+    //     console.log(res[i].title);
+    //     console.log(res[i].salary);
+    //     console.log(res[i].department_id);
+    // }
 
   });
 }
-function viewEmployees(){}
+function viewEmployees(){
+  {
+    console.log("Selecting all employees...\n");
+    connection.query("SELECT * FROM employee", function(err, res) {
+    if (err) throw err;
+    // Log all results of the SELECT statement
+    console.table(res);
+    // for(var i=0; i<res.length;i++)
+    // {
+    //     console.log(res[i].first_name);
+    //     console.log(res[i].last_name);
+    //     console.log(res[i].role_id);
+    //     console.log(res[i].manager_id);
+    // }
 
-function addDepartment(){}
-function addRole(){}
+  });
+}
+}
+
+function addDepartment(){
+  //1. get user input
+  inquirer
+    .prompt([
+      {
+        type: "choice", 
+        name: "deptName",
+        message: "What department name would you like to add?",
+   
+      },
+
+    ])
+    .then((data) => {
+      console.log(data)
+      console.log("Inserting a new product...\n");
+    var query = connection.query(
+      "INSERT INTO department SET ?",
+      {
+        name: data.deptName,
+
+      },
+      function(err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " product inserted!\n");
+        // Call updateProduct AFTER the INSERT completes
+        console.log("department updated")
+      }
+    );
+  
+    // logs the actual query being run
+    console.log(query.sql);
+    });
+
+  //2. add to database
+
+    
+
+}
+
+//this function will add an action to the database
+const addItems = () => {
+  inquirer
+    .prompt([
+      {
+        type: "list", 
+        name: "action",
+        message: "What would you like to do?",
+        choices: ["View all employees","View all employees by department","View all employees by manager", "Add employee", "Remove employee", "Update employee role", 
+        "Update employee manager"]
+      },
+
+    ])
+    .then((data) => {
+      connection.query(
+        "INSERT INTO items SET ?",
+        {
+          name: data.item,
+          importance: data.importance,
+        },
+        (err) => {
+          if (err) throw err;
+          console.log(`Item ${data.item} has been added!!!`);
+          viewItems();
+        }
+      );
+    });
+};
+
+async function addRole(){
+  //1. get user input
+  // var department= await viewDepartment();
+  // console.log(department)
+  // mangerID= department.map(
+  //   ({id, name}) =>
+  //   ({name:name, value:id})
+  //   );
+
+
+  //console.log("department: "+mangerID)
+
+  inquirer
+    .prompt([
+      {
+        type: "choice", 
+        name: "title",
+        message: "What title would you like to add?",
+   
+      },
+      {
+        type: "choice", 
+        name: "salary",
+        message: "What salary would you like to add?",
+   
+      },
+      {
+        type: "choice", 
+        name: "department_id",
+        message: "What department id would you like to add?",
+    
+   
+      },
+
+    ])
+    .then((data) => {
+      console.log(data)
+      console.log("Inserting a new role...\n");
+    var query = connection.query(
+      "INSERT INTO role SET ?",
+      {
+        title: data.title, 
+        salary: data.salary,
+        department_id: data.department_id,
+
+      },
+      function(err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " product inserted!\n");
+        // Call updateProduct AFTER the INSERT completes
+        console.log("department updated")
+      }
+    );
+  
+    // logs the actual query being run
+    console.log(query.sql);
+    });
+
+}
 function addEmployee(){}
 
 function updateEmployeeRole(){}
@@ -103,21 +250,7 @@ function updateEmployeeRole(){}
 //   console.log(query.sql);
 // }
 
-// function deleteProduct() {
-//   console.log("Deleting all strawberry icecream...\n");
-//   connection.query(
-//     "DELETE FROM products WHERE ?",
-//     {
-//       flavor: "strawberry"
-//     },
-//     function(err, res) {
-//       if (err) throw err;
-//       console.log(res.affectedRows + " products deleted!\n");
-//       // Call readProducts AFTER the DELETE completes
-//       readProducts();
-//     }
-//   );
-// }
+
 
 // function readProducts() {
 //   console.log("Selecting all products...\n");
